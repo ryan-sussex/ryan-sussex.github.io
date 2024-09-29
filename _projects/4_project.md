@@ -4,7 +4,7 @@ title: Explore-Exploit Tradeoff and Epistemic Objectives
 description: another without an image
 img:
 importance: 3
-category: ongoing
+category: starting
 ---
 
 Every project has a beautiful feature showcase page.
