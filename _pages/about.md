@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle:  <a href='#'>Buckley Lab - Sussex University</a>, <a href='#'>Verses AI</a>.
+subtitle: <a href='#'>Buckley Lab - Sussex University</a>, <a href='#'>Verses AI</a>.
 
 profile:
   align: right
