@@ -1,10 +1,10 @@
 ---
 layout: page
-title: project 4
+title: Explore-Exploit Tradeoff and Epistemic Objectives
 description: another without an image
 img:
 importance: 3
-category: fun
+category: starting
 ---
 
 Every project has a beautiful feature showcase page.
