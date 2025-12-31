@@ -2,7 +2,11 @@
 
 CONFIG_FILE=_config.yml 
 
+# bundle install
+
 /bin/bash -c "rm -f Gemfile.lock && exec jekyll serve --watch --port=8080 --host=0.0.0.0 --livereload --verbose --trace --force_polling"&
+# /bin/bash -c "exec jekyll serve --watch --port=8080 --host=0.0.0.0 --livereload --verbose --trace --force_polling"&
+
 
 while true; do
 
