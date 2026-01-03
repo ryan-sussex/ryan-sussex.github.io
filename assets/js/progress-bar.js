@@ -1,4 +1,3 @@
-
 /*
  * This JavaScript code has been adapted from the article
  * https://css-tricks.com/reading-position-indicator/ authored by Pankaj Parashar,
