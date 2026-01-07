@@ -46,7 +46,7 @@ _styles: >
 
 ## What is overparameterisation?
 
-At an intuitive level machine learning researchers say a model is overparameterised if it has the capacity for perfectly fitting the training data. Crucially, the empirical risk (or loss) is minimised by a solution which performs perfectly on the training set but poorly on the test set. This is reflected by the classic bias-variance trade-off a staple of all machine learning 101 courses.
+At an intuitive level machine learning researchers say a model is overparameterised if it has the capacity for perfectly fitting the training data. Classical intuition tells us solutions which perfectly minimise the empirical risk (or loss) perform perfectly on the training set but poorly on the test set. This is reflected by the classic bias-variance trade-off a staple of all machine learning 101 courses.
 <aside><p> Any solution achieving zero empirical risk is necessarily capturing noise - if noise is present in the data generation.</p> </aside>
 However, we remember, there could be many zero-loss solutions and some of these might be preferable to others. If there are many solutions, the solution chosen is a function of the optimiser used. The suprising finding is:
 * The somewhat natural solution (naturally found by gradient descent) has a simplicity bias.
@@ -82,10 +82,14 @@ We can roughly understand the behaviour by considering the behaviour of the line
     \DataY = \DataX\hat{\theta} 
 \end{equation}
 <aside><p> Solving this equation implies maximum likelihood but not vice-versa - e.g. in the underparameterised regime.</p> </aside>
-It is easy to see that when $d > n$ the maximum likelihood problem is ill-posed -- there are more unknowns than equations. Alternatively phrased the linear map $X: \mathbb{R}^{d} \rightarrow \mathbb{R}^n$ has kernel size $d-n$ by rank-nullity. Therefore any solution $\hat{\theta}$ has the same empirical loss as $\hat{\theta} + k$. 
+It is easy to see that when $d > n$ the maximum likelihood problem is ill-posed -- there are more unknowns than equations. Alternatively phrased the linear map $X: \mathbb{R}^{d} \rightarrow \mathbb{R}^n$ has kernel size $d-n$ by rank-nullity. Therefore any solution $\hat{\theta}$ has the same empirical loss as $\hat{\theta} + k$ for $k \in ker(X)$. 
 <aside><p> i.e. the parameter space has a massive space of **symmetries**, or **redundancies**, with respect to the data.</p> </aside>
 
-If we squint we can see why the test loss spikes when $n=d$. Effectively we are trying to find a left inverse for $X$ mapping the target-space to the parameter-space. In the square case the solution is uniquely $\hat{\theta}=X^{-1}y$. The variance part (of the bias variance decomposition) measures how sensitive this estimator is to a perturbation. Intuitively, if the number of unknowns is exactly the same as the number of equations the retrieved unknown is going to maximally depend on the equations.
+If we squint we can see why the test loss spikes when $n=d$. Effectively we are trying to find a left inverse for $X$ mapping the target-space to the parameter-space. In the square case the solution is uniquely $\hat{\theta}=X^{-1}y$. The variance part (of the bias variance decomposition) measures how sensitive this estimator is to a perturbation. Intuitively, if the number of unknowns is exactly the same as the number of equations the retrieved unknown is going to maximally depend on the equations. 
+
+Whereas if there are less parameters than datapoints $d < n$ then the map is no longer surjective, and so the parameter is invariant to pertubations lieing in the co-kernel of $X$. i.e. $\theta(y) = \theta(y + k)$ for $k \in coker(X)$    
+
+<!-- More formally, take two similar target vectors $y^{(2)} = y^{(1)} + \epsilon$, then $\theta^{(2)}-\theta^{(1)} = X^{-1}\epsilon$ and since $X^{-1}$ stretches space (in some direction) according to the inverse of the minimum eigenvalue. Directions of small varianc in the data   -->
 
 <!-- More formally we can plug in $y' = y + \epsilon$ to find $\hat{\theta} - \hat{\theta}' = X^{-1}\epsilon$. -->
 <!-- We immediately see that small eigenvalues of $X$ are going to be problematic.   -->
@@ -110,16 +114,46 @@ So we are really just hand-picking the solution which solves the equation (perfe
 \end{equation}
 We can rewrite this in the eigenspace of the sample covariance, let $X=UD^{1/2}V^T$ so that $X^TX = VDV^T$ then we have
 \begin{equation}
-\theta_{\lambda} =  V^{-1}\tilde{D}U^Ty = \sum_{k} \frac{\sigma_{k}^{1/2}}{\lambda+\sigma_k}v_{k}\langle u_{k}, y\rangle
+\theta_{\lambda} =  V\tilde{D}U^Ty = \sum_{k} \frac{\sigma_{k}^{1/2}}{\lambda+\sigma_k}v_{k}\langle u_{k}, y\rangle
 \end{equation}
-So we see the ridge estimator acts as *spectral filter* reducing the effect effect of eigendirections that are small compared to $\lambda$. The unregularised solution ($\lambda=0$) has a $\sigma_{k}^{-1/2}$ which blows up small eigendirections.
+So we see the ridge estimator acts as [spectral filter](https://en.wikipedia.org/wiki/Regularization_by_spectral_filtering#:~:text=Spectral%20regularization%20algorithms%20rely%20on,number%20or%20an%20unbounded%20inverse.) reducing the effect effect of eigendirections that are small compared to $\lambda$. The unregularised solution ($\lambda=0$) has a $\sigma_{k}^{-1/2}$ which blows up small eigendirections. However the ridge estimator, as opposed to the minimum norm estimator, does not achieve minimal ERM and in a sense blindly shrinks potentially useful .   
 
-Now suppose that the datapoint lies in the nullspace then the prediction $\theta_{\lambda}\cdot v = \frac{1}{\lambda}\langle u_{0}, y \rangle = 0$
+Note the vectors $v_{k}$ not associated with $0$ eigenvalues exacly span the pre-image of $X$ and are orthogonal to the kernel. Any point in $x \in \mathbb{R}^p$ can be decomposed into $x = k + v$ where $k\cdot v = 0$. So for a new point:
+
+\begin{equation}
+  x \cdot \theta_{\lambda} = \frac{p-n}{\lambda} \langle k, v_{k}\rangle \langle u_{k}, y\rangle
+\end{equation}
+
+<!-- Now suppose that the datapoint lies in the nullspace then the prediction $\theta_{\lambda}\cdot v = \frac{1}{\lambda}\langle u_{0}, y \rangle = 0$ -->
 
 
 ### Why does more parameters help?
 
-Ultimately the more more capacity the network has, the easier it is to ensure the noise samples don't effect other predictions and therefore the regularised inverse works better (is less lossy).   
+Ultimately the more more capacity the network has, the easier it is to ensure the noise samples don't effect other predictions and therefore the regularised inverse is more stable.
+
+From the point of view of simultaneous equations -- suppose, in the extreme case, there is only one data point and many duplicated features $x=(1,...1), y=y'$. Then the solution set is $\\{\theta: \sum \theta_i = y' \\}$. The minimum norm solution is clearly symmetric so $\hat{\theta}_i(y) = \frac{y}{p}$. As $p \rightarrow \infty$, $\hat{\theta}_i(y)\rightarrow 0$ the solution becomes more stable to perturbations as the number of parameters increases, in particular $\theta^2=\sum_i \theta_i^2 \rightarrow 0$. For a test data point the prediction will be 
+$\frac{y'}{p} \sum_i x_i \rightarrow 0$. The memorisation becomes spread across all parameters such that unless we see the exact same datapoint, the prediction will be 0. 
+
+On the other hand we could have chosen a bad solution e.g. $\theta_b = (y, 0, ..., 0)$ in which case $\theta_b^2 \rightarrow y^2$. For any new datapoint the prediction will be $x_1y'$ which massively depends on the single training point (this is effectively the interpolation regime $n=p=1$). 
+<aside><p> Of course this is equally likely to be the solution with no prior -- for example a sparsity inducing prior might prefer this solution. No free lunch!
+</p> </aside>
+<!-- $\theta_{b}=(y', 0, ..., 0)$ in which case there is still  -->
+
+With $n=1$ it seems like we are just ignoring the data. In reality if we have $n$ equations and $p=rn$ parameters the memorisation can be spread across the $r$ redundant directions, the noise (being random) will cancel out while the signal will remain. 
+
+
+More parameters increase the dimension of the nullspace, allowing interpolating solutions that fit noise while keeping the prediction operator stable in directions orthogonal to the data.
+
+---
+## Landscape viewpoint
+
+We can also consider how this whole setup relates to the notion of flat minima:
+* $X^TX$ is the hessian 
+* The nullspace manifests as flat directions
+* Almost flat directions result in minima that are far from the origin
+* Increasing the number of parameters can keep the value close to the origin...
+
+
 
 <!-- We can consider how the predictions would vary based on a small pertubation of the training set
 \begin{equation}
